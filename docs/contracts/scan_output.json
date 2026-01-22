@@ -1,0 +1,25 @@
+{
+  "project_name": "DocGen",
+  "repo_root": "/home/ligsow/DocGen",
+  "stacks": ["python", "node", "docker"],
+  "files_detected": [
+    {"path": "pyproject.toml", "type": "python"},
+    {"path": "requirements.txt", "type": "python"},
+    {"path": "package.json", "type": "node"},
+    {"path": "Dockerfile", "type": "docker"},
+    {"path": ".github/workflows/ci.yml", "type": "github_actions"}
+  ],
+  "commands": {
+    "run": "python -m docgen",
+    "test": "pytest",
+    "lint": "ruff check .",
+    "format": "ruff format ."
+  },
+  "ci": ["github_actions"],
+  "docs": {
+    "readme_path": "docs/README.md",
+    "architecture_path": "docs/ARCHITECTURE.md",
+    "github_pages_dir": "docs/",
+    "doxygen_dir": "docs/doxygen/"
+  }
+}
