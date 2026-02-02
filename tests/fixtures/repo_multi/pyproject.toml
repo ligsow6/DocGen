@@ -1,0 +1,8 @@
+[project]
+name = "repo-multi"
+version = "0.1.0"
+
+dependencies = ["pytest", "ruff"]
+
+[tool.ruff]
+line-length = 100

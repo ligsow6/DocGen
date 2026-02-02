@@ -1,4 +1,10 @@
 {
   "name": "repo-node",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite",
+    "test": "vitest",
+    "lint": "eslint .",
+    "build": "vite build"
+  }
 }

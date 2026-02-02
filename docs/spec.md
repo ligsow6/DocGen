@@ -104,11 +104,13 @@ ARCHITECTURE.md (template lorsque le fichier est cree par DocGen):
 **Modele ProjectInfo (interne)**
 - `project_name` (string)
 - `repo_root` (string)
-- `stacks` (liste de strings, ex: `python`, `node`, `docker`)
-- `files_detected` (liste d'objets `path`, `type`)
-- `commands` (objet avec `run`, `test`, `lint`, `format`)
+- `stacks` (liste d'objets `{name, confidence, evidence, attributes}`)\n  - `confidence`: float 0.0-1.0\n  - `evidence`: liste de chemins d'indices (ex: `package.json`)\n  - `attributes` (optionnel): infos additionnelles (ex: `package_manager`, `typescript`, `tool`)\n+- `files_detected` (liste d'objets `path`, `type`)
+- `commands` (objet avec `run`, `test`, `lint`, `build`, `format`)
 - `ci` (liste de strings, ex: `github_actions`, `gitlab_ci`)
 - `docs` (objet pour chemins/urls detectes)
+- `package_manager` (optionnel, ex: `npm`, `yarn`, `pnpm`)
+- `python_tooling` (optionnel, ex: `poetry`)
+- `warnings` (liste de strings, optionnelle)
 
 **Regles de detection (haut niveau)**
 - Python: presence de `pyproject.toml`, `requirements.txt`, `setup.cfg`.

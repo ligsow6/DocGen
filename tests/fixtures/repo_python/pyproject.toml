@@ -1,3 +1,11 @@
-[project]
+[tool.poetry]
 name = "repo-python"
 version = "0.1.0"
+
+description = "Fixture repo"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 88

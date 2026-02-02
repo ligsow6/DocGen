@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from typing import Any
 
@@ -10,12 +10,20 @@ from typing import Any
 @dataclass(frozen=True)
 class StackInfo:
     name: str
-    version: str | None = None
+    confidence: float
+    evidence: list[str] = field(default_factory=list)
+    attributes: dict[str, Any] = field(default_factory=dict)
 
     def as_label(self) -> str:
-        if self.version:
-            return f"{self.name} {self.version}"
         return self.name
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "confidence": self.confidence,
+            "evidence": list(self.evidence),
+            "attributes": dict(self.attributes),
+        }
 
 
 @dataclass(frozen=True)
@@ -32,6 +40,7 @@ class Commands:
     run: str | None = None
     test: str | None = None
     lint: str | None = None
+    build: str | None = None
     format: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,6 +48,7 @@ class Commands:
             "run": self.run,
             "test": self.test,
             "lint": self.lint,
+            "build": self.build,
             "format": self.format,
         }
 
@@ -63,21 +73,27 @@ class DocsInfo:
 class ProjectInfo:
     project_name: str
     repo_root: str
-    stacks: list[str]
+    stacks: list[StackInfo]
     files_detected: list[DetectedFile]
     commands: Commands
     ci: list[str]
     docs: DocsInfo
+    package_manager: str | None = None
+    python_tooling: str | None = None
+    warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "project_name": self.project_name,
             "repo_root": self.repo_root,
-            "stacks": list(self.stacks),
+            "stacks": [stack.to_dict() for stack in self.stacks],
             "files_detected": [item.to_dict() for item in self.files_detected],
             "commands": self.commands.to_dict(),
             "ci": list(self.ci),
             "docs": self.docs.to_dict(),
+            "package_manager": self.package_manager,
+            "python_tooling": self.python_tooling,
+            "warnings": list(self.warnings),
         }
 
     def to_json(self) -> str:

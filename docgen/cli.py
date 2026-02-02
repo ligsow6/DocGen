@@ -144,7 +144,7 @@ def scan(
     config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file path"),
     format: str = typer.Option("text", "--format", "-f", help="Output format: text|json"),
 ) -> None:
-    """Scan repository and output a stub ProjectInfo."""
+    """Scan repository and output ProjectInfo."""
     try:
         repo_path = resolve_repo_path(repo)
         config_data = _resolve_config(repo_path, config)
@@ -164,7 +164,13 @@ def scan(
 
         typer.echo(f"Project: {project.project_name}")
         typer.echo(f"Repo: {project.repo_root}")
-        typer.echo(f"Stacks: {', '.join(project.stacks) if project.stacks else '-'}")
+        typer.echo("Stacks:")
+        if project.stacks:
+            for stack in project.stacks:
+                evidence = ", ".join(stack.evidence) if stack.evidence else "-"
+                typer.echo(f"- {stack.name} (confidence {stack.confidence:.2f}): {evidence}")
+        else:
+            typer.echo("- none")
         typer.echo("Detected files:")
         if project.files_detected:
             for item in project.files_detected:
@@ -172,11 +178,18 @@ def scan(
         else:
             typer.echo("- none")
         typer.echo(f"CI: {', '.join(project.ci) if project.ci else '-'}")
+        typer.echo(f"Package manager: {project.package_manager or '-'}")
+        typer.echo(f"Python tooling: {project.python_tooling or '-'}")
         typer.echo("Commands:")
         typer.echo(f"- run: {display(project.commands.run)}")
         typer.echo(f"- test: {display(project.commands.test)}")
         typer.echo(f"- lint: {display(project.commands.lint)}")
+        typer.echo(f"- build: {display(project.commands.build)}")
         typer.echo(f"- format: {display(project.commands.format)}")
+        if project.warnings:
+            typer.echo("Warnings:")
+            for warning in project.warnings:
+                typer.echo(f"- {warning}")
     except Exception as exc:
         _handle_error(exc)
 

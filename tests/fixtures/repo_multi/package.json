@@ -1,0 +1,10 @@
+{
+  "name": "repo-multi",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest",
+    "lint": "eslint .",
+    "build": "webpack"
+  }
+}
