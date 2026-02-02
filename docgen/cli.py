@@ -159,17 +159,24 @@ def scan(
             typer.echo(project.to_json())
             return
 
+        def display(value: str | None) -> str:
+            return value if value else "-"
+
         typer.echo(f"Project: {project.project_name}")
         typer.echo(f"Repo: {project.repo_root}")
-        typer.echo(f"Stacks: {', '.join(project.stacks)}")
+        typer.echo(f"Stacks: {', '.join(project.stacks) if project.stacks else '-'}")
         typer.echo("Detected files:")
-        for item in project.files_detected:
-            typer.echo(f"- {item.path} ({item.type})")
+        if project.files_detected:
+            for item in project.files_detected:
+                typer.echo(f"- {item.path} ({item.type})")
+        else:
+            typer.echo("- none")
+        typer.echo(f"CI: {', '.join(project.ci) if project.ci else '-'}")
         typer.echo("Commands:")
-        typer.echo(f"- run: {project.commands.run}")
-        typer.echo(f"- test: {project.commands.test}")
-        typer.echo(f"- lint: {project.commands.lint}")
-        typer.echo(f"- format: {project.commands.format}")
+        typer.echo(f"- run: {display(project.commands.run)}")
+        typer.echo(f"- test: {display(project.commands.test)}")
+        typer.echo(f"- lint: {display(project.commands.lint)}")
+        typer.echo(f"- format: {display(project.commands.format)}")
     except Exception as exc:
         _handle_error(exc)
 
