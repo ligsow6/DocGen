@@ -126,6 +126,9 @@ ARCHITECTURE.md (template lorsque le fichier est cree par DocGen):
 - Contenu minimal:
   - `output_dir: docs`
   - `exclude: [".git/", "node_modules/", "dist/", "build/"]`
+  - `readme_target: output`
+  - `enable_github_pages: true`
+  - `enable_doxygen_block: auto`
 - Cree le dossier `output_dir` si absent.
 - Cree des fichiers templates `README.md` et `ARCHITECTURE.md` avec zones gerees si absents.
 - Ne modifie pas de fichiers existants qui contiennent deja des zones gerees.

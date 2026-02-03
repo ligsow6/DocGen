@@ -12,15 +12,27 @@ from .errors import ConfigError, DocGenIOError
 
 DEFAULT_OUTPUT_DIR = "docs"
 DEFAULT_EXCLUDE = [".git/", "node_modules/", "dist/", "build/"]
+DEFAULT_README_TARGET = "output"
+DEFAULT_ENABLE_GITHUB_PAGES = True
+DEFAULT_ENABLE_DOXYGEN_BLOCK: str | bool = "auto"
 
 
 @dataclass(frozen=True)
 class DocGenConfig:
     output_dir: str = DEFAULT_OUTPUT_DIR
     exclude: list[str] = field(default_factory=lambda: list(DEFAULT_EXCLUDE))
+    readme_target: str = DEFAULT_README_TARGET
+    enable_github_pages: bool = DEFAULT_ENABLE_GITHUB_PAGES
+    enable_doxygen_block: str | bool = DEFAULT_ENABLE_DOXYGEN_BLOCK
 
     def to_dict(self) -> dict[str, Any]:
-        return {"output_dir": self.output_dir, "exclude": list(self.exclude)}
+        return {
+            "output_dir": self.output_dir,
+            "exclude": list(self.exclude),
+            "readme_target": self.readme_target,
+            "enable_github_pages": self.enable_github_pages,
+            "enable_doxygen_block": self.enable_doxygen_block,
+        }
 
 
 def default_config() -> DocGenConfig:
@@ -55,7 +67,13 @@ def load_config(
 
 
 def validate_config(data: dict[str, Any]) -> DocGenConfig:
-    allowed_keys = {"output_dir", "exclude"}
+    allowed_keys = {
+        "output_dir",
+        "exclude",
+        "readme_target",
+        "enable_github_pages",
+        "enable_doxygen_block",
+    }
     unknown = set(data.keys()) - allowed_keys
     if unknown:
         raise ConfigError(f"Unknown config keys: {', '.join(sorted(unknown))}")
@@ -68,7 +86,28 @@ def validate_config(data: dict[str, Any]) -> DocGenConfig:
     if not isinstance(exclude, list) or not all(isinstance(item, str) for item in exclude):
         raise ConfigError("exclude must be a list of strings")
 
-    return DocGenConfig(output_dir=output_dir, exclude=list(exclude))
+    readme_target = data.get("readme_target", DEFAULT_README_TARGET)
+    if readme_target not in {"root", "output"}:
+        raise ConfigError("readme_target must be 'root' or 'output'")
+
+    enable_github_pages = data.get("enable_github_pages", DEFAULT_ENABLE_GITHUB_PAGES)
+    if not isinstance(enable_github_pages, bool):
+        raise ConfigError("enable_github_pages must be a boolean")
+
+    enable_doxygen_block = data.get("enable_doxygen_block", DEFAULT_ENABLE_DOXYGEN_BLOCK)
+    if isinstance(enable_doxygen_block, str):
+        if enable_doxygen_block != "auto":
+            raise ConfigError("enable_doxygen_block must be 'auto', true, or false")
+    elif not isinstance(enable_doxygen_block, bool):
+        raise ConfigError("enable_doxygen_block must be 'auto', true, or false")
+
+    return DocGenConfig(
+        output_dir=output_dir,
+        exclude=list(exclude),
+        readme_target=readme_target,
+        enable_github_pages=enable_github_pages,
+        enable_doxygen_block=enable_doxygen_block,
+    )
 
 
 def write_config(path: Path, config: DocGenConfig, overwrite: bool = False) -> None:

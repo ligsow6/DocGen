@@ -1,34 +1,179 @@
-"""Stub build service for DocGen."""
+"""Build service for DocGen."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+import os
 from pathlib import Path
+from typing import Any
 
 from ..config import DocGenConfig
+from ..errors import UsageError
+from ..models import DetectedFile, ProjectInfo
+from ..rendering import render_template, write_text
+from ..utils.ignore import build_excluder
+from ..services.scan_service import scan_repo, _build_excludes
 
 
-def build_docs(repo_path: Path, config: DocGenConfig, dry_run: bool = False) -> list[Path]:
-    output_dir = (repo_path / config.output_dir).resolve()
-    targets = [output_dir / "README.md", output_dir / "ARCHITECTURE.md"]
+@dataclass(frozen=True)
+class BuildPlan:
+    targets: list[Path]
+    sections: list[str]
+    template_map: dict[str, Path]
+
+
+def build_docs(
+    repo_path: Path,
+    config: DocGenConfig,
+    dry_run: bool = False,
+    force: bool = False,
+) -> BuildPlan:
+    project = scan_repo(repo_path, config)
+    context, sections, template_map = _prepare_context(repo_path, config, project)
+    plan = BuildPlan(targets=list(template_map.values()), sections=sections, template_map=template_map)
 
     if dry_run:
-        return targets
+        return plan
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    for target in plan.targets:
+        if target.exists() and not force:
+            raise UsageError(f"File exists, use --force to overwrite: {target}")
 
-    for target in targets:
-        if target.exists():
-            continue
-        target.write_text(_stub_content(target.name, repo_path.name), encoding="utf-8")
+    for template_name, target in plan.template_map.items():
+        content = render_template(template_name, context)
+        write_text(target, content)
 
-    return targets
+    return plan
 
 
-def _stub_content(filename: str, project_name: str) -> str:
-    if filename.lower() == "readme.md":
-        return (
-            f"# {project_name}\n\n"
-            "DocGen build stub. Content will be generated in a later step.\n"
-        )
-    return (
-        "# Architecture\n\n"
-        "DocGen build stub. Content will be generated in a later step.\n"
-    )
+def _prepare_context(
+    repo_path: Path,
+    config: DocGenConfig,
+    project: ProjectInfo,
+) -> tuple[dict[str, Any], list[str], dict[str, Path]]:
+    output_dir = Path(config.output_dir)
+    readme_target = config.readme_target
+
+    readme_path = (output_dir / "README.md") if readme_target == "output" else Path("README.md")
+    arch_path = output_dir / "ARCHITECTURE.md"
+    index_path = output_dir / "index.md"
+
+    readme_link, architecture_link, index_link = _build_links(output_dir, readme_target)
+
+    enable_github_pages = config.enable_github_pages
+    enable_doxygen_block = _enable_doxygen_block(config.enable_doxygen_block, project)
+
+    key_files = _filter_key_files(project.files_detected)
+    top_level_dirs = _top_level_dirs(repo_path, config)
+    top_level_dirs = _filter_structure_dirs(top_level_dirs)
+
+    context = {
+        "project_name": project.project_name,
+        "repo_root": project.repo_root,
+        "stacks": project.stacks,
+        "commands": project.commands,
+        "ci": project.ci,
+        "key_files": key_files,
+        "top_level_dirs": top_level_dirs,
+        "enable_github_pages": enable_github_pages,
+        "enable_doxygen_block": enable_doxygen_block,
+        "docker_enabled": any(stack.name == "docker" for stack in project.stacks),
+        "readme_link": readme_link,
+        "architecture_link": architecture_link,
+        "index_link": index_link,
+    }
+
+    sections = ["Summary", "Stacks", "Commands", "Structure", "CI", "Documentation"]
+    if enable_github_pages:
+        sections.append("GitHub Pages")
+    if enable_doxygen_block:
+        sections.append("Doxygen")
+
+    template_map: dict[str, Path] = {
+        "README.md.j2": repo_path / readme_path,
+        "ARCHITECTURE.md.j2": repo_path / arch_path,
+    }
+    if enable_github_pages:
+        template_map["INDEX.md.j2"] = repo_path / index_path
+
+    return context, sections, template_map
+
+
+def _build_links(output_dir: Path, readme_target: str) -> tuple[str, str, str]:
+    output_posix = output_dir.as_posix()
+    if output_posix == ".":
+        output_posix = ""
+
+    if readme_target == "output":
+        readme_link = "README.md"
+        architecture_link = "ARCHITECTURE.md"
+        index_link = "index.md"
+        return readme_link, architecture_link, index_link
+
+    prefix = f"{output_posix}/" if output_posix else ""
+    readme_link = "../README.md" if output_posix else "README.md"
+    architecture_link = f"{prefix}ARCHITECTURE.md"
+    index_link = f"{prefix}index.md"
+    return readme_link, architecture_link, index_link
+
+
+def _enable_doxygen_block(setting: str | bool, project: ProjectInfo) -> bool:
+    if isinstance(setting, bool):
+        return setting
+    has_doxygen = any(item.type == "doxygen" for item in project.files_detected)
+    return has_doxygen
+
+
+def _filter_key_files(files: list[DetectedFile]) -> list[DetectedFile]:
+    filtered = [
+        item
+        for item in files
+        if item.type not in {"readme", "docs_dir"}
+    ]
+    return sorted(filtered, key=lambda item: (item.type, item.path))
+
+
+def _top_level_dirs(repo_path: Path, config: DocGenConfig) -> list[str]:
+    patterns = _build_excludes(config.exclude, config.output_dir)
+    excluder = build_excluder(patterns)
+
+    names: list[str] = []
+    with os.scandir(repo_path) as it:
+        for entry in it:
+            if not entry.is_dir(follow_symlinks=False):
+                continue
+            rel = entry.name
+            rel_posix = rel.replace("\\", "/")
+            if excluder.is_excluded(rel_posix, is_dir=True):
+                continue
+            names.append(entry.name)
+    return sorted(set(names))
+
+
+def _filter_structure_dirs(names: list[str]) -> list[str]:
+    allowlist = {
+        "src",
+        "app",
+        "apps",
+        "packages",
+        "services",
+        "libs",
+        "lib",
+        "tests",
+        "test",
+        "docs",
+        "infra",
+        "docker",
+        "scripts",
+        "config",
+        "configs",
+        "backend",
+        "frontend",
+        "client",
+        "server",
+        "api",
+    }
+    filtered = [name for name in names if name in allowlist]
+    if filtered:
+        return sorted(filtered)
+    return sorted(names)

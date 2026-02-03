@@ -7,6 +7,7 @@
 - Managed zones: HTML comment markers `<!-- DOCGEN:BEGIN id="..." -->` and matching END. Reason: robust, diff-friendly, language-agnostic.
 - Output location: `output_dir` is the base for README and ARCHITECTURE; default `docs/`. Reason: avoid overwriting root by default.
 - Rendering: Jinja2 templates (optional) or simple string templates. Reason: keep templates readable and extensible.
+- Build outputs: README/ARCHITECTURE/index are generated from Jinja2 templates; default `readme_target` is `output`. Reason: avoid overwriting root by default.
 - Logging: stdlib `logging` to stderr, INFO by default, `--verbose` for DEBUG. Reason: no heavy deps.
 - Errors: dedicated exit codes for config/scan/build; never modify files on marker corruption. Reason: safe idempotence.
 - Module layout: `docgen/{cli.py,config.py,models.py,errors.py,logging.py,services/,utils/}`. Reason: separation of concerns without extra build tooling.

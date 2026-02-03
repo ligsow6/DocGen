@@ -9,6 +9,7 @@ description = "CLI to generate standardized documentation from a local Git repos
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+  "Jinja2>=3.1.3",
   "typer>=0.12.0",
   "PyYAML>=6.0.1",
 ]
@@ -24,6 +25,9 @@ docgen = "docgen.cli:app"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["docgen*"]
+
+[tool.setuptools.package-data]
+docgen = ["templates/*.j2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

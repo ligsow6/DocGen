@@ -24,6 +24,9 @@ def test_init_creates_config_and_output_dir(tmp_path: Path) -> None:
     data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     assert data["output_dir"] == DEFAULT_OUTPUT_DIR
     assert data["exclude"] == DEFAULT_EXCLUDE
+    assert data["readme_target"] == "output"
+    assert data["enable_github_pages"] is True
+    assert data["enable_doxygen_block"] == "auto"
 
     output_dir = repo / DEFAULT_OUTPUT_DIR
     assert output_dir.exists()

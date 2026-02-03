@@ -1,0 +1,19 @@
+# {{ project_name }} - Documentation
+
+Bienvenue sur la documentation du projet.
+
+## Liens
+- README: {{ readme_link }}
+- Architecture: {{ architecture_link }}
+
+## Stacks detectees
+{% if stacks %}
+{% for stack in stacks %}- {{ stack.name }}
+{% endfor %}
+{% else %}
+- Aucune stack detectee.
+{% endif %}
+
+{% if enable_github_pages %}## GitHub Pages
+Cette page est generee pour GitHub Pages.
+{% endif %}

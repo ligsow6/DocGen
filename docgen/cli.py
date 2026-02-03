@@ -199,24 +199,29 @@ def build(
     repo: Optional[Path] = typer.Option(None, "--repo", "-r", help="Repository path"),
     config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file path"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Do not write files"),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing files"),
 ) -> None:
-    """Build documentation (stub)."""
+    """Build documentation."""
     try:
         repo_path = resolve_repo_path(repo)
         config_data = _resolve_config(repo_path, config)
 
-        targets = build_docs(repo_path, config_data, dry_run=dry_run)
+        plan = build_docs(repo_path, config_data, dry_run=dry_run, force=force)
 
         if dry_run:
             typer.echo("Dry run. Files that would be generated:")
         else:
             typer.echo("Files prepared:")
 
-        for path in targets:
+        for path in plan.targets:
             try:
                 rel = path.relative_to(repo_path)
                 typer.echo(f"- {rel}")
             except ValueError:
                 typer.echo(f"- {path}")
+        if dry_run and plan.sections:
+            typer.echo("Sections:")
+            for section in plan.sections:
+                typer.echo(f"- {section}")
     except Exception as exc:
         _handle_error(exc)

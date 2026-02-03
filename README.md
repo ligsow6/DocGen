@@ -33,9 +33,11 @@ Run stub scan/build:
 docgen scan --format json
 
 docgen build --dry-run
+docgen build --force
 ```
 
 ## Notes
 
-- The current `scan` and `build` commands are stubs. They return deterministic demo data and do not scan the filesystem yet.
+- `scan` performs a real filesystem scan and suggests stacks/commands.
+- `build` renders Markdown docs from templates (no marker/idempotence yet).
 - See `docs/spec.md` for the detailed specification.
