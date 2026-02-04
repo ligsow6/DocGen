@@ -7,11 +7,11 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from .errors import DocGenIOError
+from ..errors import DocGenIOError
 
 
 def _template_dir() -> Path:
-    return Path(__file__).parent / "templates"
+    return Path(__file__).parent.parent / "templates"
 
 
 def create_environment() -> Environment:

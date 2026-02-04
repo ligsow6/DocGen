@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from ..config import DocGenConfig
-from ..errors import UsageError
 from ..models import DetectedFile, ProjectInfo
 from ..rendering import render_template, write_text
+from ..rendering.markers import apply_all_sections, extract_managed_sections
 from ..utils.ignore import build_excluder
 from ..services.scan_service import scan_repo, _build_excludes
 
@@ -20,6 +20,16 @@ class BuildPlan:
     targets: list[Path]
     sections: list[str]
     template_map: dict[str, Path]
+    reports: dict[Path, "BuildReport"]
+
+
+@dataclass(frozen=True)
+class BuildReport:
+    created: bool = False
+    overwritten: bool = False
+    replaced: list[str] | None = None
+    added: list[str] | None = None
+    unchanged: list[str] | None = None
 
 
 def build_docs(
@@ -30,18 +40,39 @@ def build_docs(
 ) -> BuildPlan:
     project = scan_repo(repo_path, config)
     context, sections, template_map = _prepare_context(repo_path, config, project)
-    plan = BuildPlan(targets=list(template_map.values()), sections=sections, template_map=template_map)
-
-    if dry_run:
-        return plan
-
-    for target in plan.targets:
-        if target.exists() and not force:
-            raise UsageError(f"File exists, use --force to overwrite: {target}")
+    plan = BuildPlan(
+        targets=list(template_map.values()),
+        sections=sections,
+        template_map=template_map,
+        reports={},
+    )
 
     for template_name, target in plan.template_map.items():
         content = render_template(template_name, context)
-        write_text(target, content)
+        section_names = [section.name for section in extract_managed_sections(content)]
+        role = _file_role(target.name)
+
+        if not target.exists():
+            plan.reports[target] = BuildReport(created=True, added=section_names)
+            if not dry_run:
+                write_text(target, content)
+            continue
+
+        if force:
+            plan.reports[target] = BuildReport(overwritten=True, added=section_names)
+            if not dry_run:
+                write_text(target, content)
+            continue
+
+        existing = target.read_text(encoding="utf-8")
+        updated, report = apply_all_sections(existing, content, role)
+        plan.reports[target] = BuildReport(
+            replaced=report.replaced,
+            added=report.added,
+            unchanged=report.unchanged,
+        )
+        if not dry_run:
+            write_text(target, updated)
 
     return plan
 
@@ -97,6 +128,15 @@ def _prepare_context(
         template_map["INDEX.md.j2"] = repo_path / index_path
 
     return context, sections, template_map
+
+
+def _file_role(filename: str) -> str:
+    lower = filename.lower()
+    if lower == "readme.md":
+        return "readme"
+    if lower == "architecture.md":
+        return "architecture"
+    return "index"
 
 
 def _build_links(output_dir: Path, readme_target: str) -> tuple[str, str, str]:

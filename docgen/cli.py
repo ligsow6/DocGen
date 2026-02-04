@@ -219,9 +219,23 @@ def build(
                 typer.echo(f"- {rel}")
             except ValueError:
                 typer.echo(f"- {path}")
-        if dry_run and plan.sections:
+        if dry_run:
             typer.echo("Sections:")
-            for section in plan.sections:
-                typer.echo(f"- {section}")
+            for target in plan.targets:
+                report = plan.reports.get(target)
+                if not report:
+                    continue
+                label = target.name
+                typer.echo(f"- {label}:")
+                if report.created:
+                    typer.echo("  - created")
+                if report.overwritten:
+                    typer.echo("  - overwritten")
+                if report.added:
+                    typer.echo(f"  - added: {', '.join(report.added)}")
+                if report.replaced:
+                    typer.echo(f"  - replaced: {', '.join(report.replaced)}")
+                if report.unchanged:
+                    typer.echo(f"  - unchanged: {', '.join(report.unchanged)}")
     except Exception as exc:
         _handle_error(exc)

@@ -2,10 +2,13 @@
 
 Bienvenue sur la documentation du projet.
 
+<!-- DOCGEN:START pages -->
 ## Liens
 - README: {{ readme_link }}
 - Architecture: {{ architecture_link }}
+<!-- DOCGEN:END pages -->
 
+<!-- DOCGEN:START stacks -->
 ## Stacks detectees
 {% if stacks %}
 {% for stack in stacks %}- {{ stack.name }}
@@ -13,7 +16,10 @@ Bienvenue sur la documentation du projet.
 {% else %}
 - Aucune stack detectee.
 {% endif %}
+<!-- DOCGEN:END stacks -->
 
-{% if enable_github_pages %}## GitHub Pages
+{% if enable_github_pages %}<!-- DOCGEN:START pages_info -->
+## GitHub Pages
 Cette page est generee pour GitHub Pages.
+<!-- DOCGEN:END pages_info -->
 {% endif %}

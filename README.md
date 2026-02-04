@@ -39,5 +39,18 @@ docgen build --force
 ## Notes
 
 - `scan` performs a real filesystem scan and suggests stacks/commands.
-- `build` renders Markdown docs from templates (no marker/idempotence yet).
+- `build` renders Markdown docs from templates and updates only managed sections.
 - See `docs/spec.md` for the detailed specification.
+
+## Idempotence & sections gerees
+
+DocGen gere uniquement des sections encadrees par des marqueurs HTML :
+
+```
+<!-- DOCGEN:START summary -->
+... contenu gere ...
+<!-- DOCGEN:END summary -->
+```
+
+Tout contenu hors des marqueurs est preserve. Relancer `docgen build` met a jour
+uniquement les sections gerees, sans ecraser les notes manuelles.

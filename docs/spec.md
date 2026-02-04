@@ -26,18 +26,18 @@ Hors perimetre:
 ### A) Strategie "zones gerees"
 
 **Markers (format exact)**
-Les markers sont des commentaires HTML sur une seule ligne. Ils doivent etre exacts, sensibles a la casse, et porter un `id` unique.
+Les markers sont des commentaires HTML sur une seule ligne. Ils doivent etre exacts, sensibles a la casse, et porter un nom de section unique.
 
 ```
-<!-- DOCGEN:BEGIN id="readme.summary" -->
+<!-- DOCGEN:START summary -->
 ... contenu gere ...
-<!-- DOCGEN:END id="readme.summary" -->
+<!-- DOCGEN:END summary -->
 ```
 
 Regles:
-- Chaque `BEGIN` doit avoir un `END` avec le meme `id`.
+- Chaque `START` doit avoir un `END` avec le meme nom de section.
 - Les zones ne peuvent pas s'imbriquer.
-- Les `id` doivent etre uniques dans un fichier.
+- Les noms de section doivent etre uniques dans un fichier.
 - Le contenu gere est totalement remplace par DocGen a chaque `build`.
 
 **Remplacement et preservation**
@@ -47,7 +47,7 @@ Regles:
 
 **Si markers absents**
 - Si le fichier n'existe pas: DocGen cree le fichier complet a partir d'un template (avec zones gerees et sections manuelles vides).
-- Si le fichier existe mais sans markers: DocGen ajoute une section "## Documentation generee" en fin de fichier contenant toutes les zones gerees attendues pour ce type de fichier.
+- Si le fichier existe mais sans markers: DocGen insere les sections gerees selon des regles deterministes par fichier (README apres le premier titre, ARCHITECTURE en fin, index apres front-matter ou premier titre).
 
 **Markers corrompus**
 Cas d'erreurs:
@@ -95,8 +95,8 @@ ARCHITECTURE.md (template lorsque le fichier est cree par DocGen):
 6. `## Notes manuelles` (manuel)
 
 **Insertion dans fichier existant sans markers**
-- DocGen ajoute en fin de fichier une section `## Documentation generee`.
-- Cette section contient les zones gerees attendues (meme ordre que le template).
+- DocGen insere les sections gerees aux emplacements deterministes (README apres le premier titre, ARCHITECTURE en fin, index apres front-matter ou premier titre).
+- Les sections inserees respectent l'ordre du template.
 - Le contenu existant est preserve.
 
 ### C) Contrat de detection (modele interne)
