@@ -7,6 +7,14 @@ from typing import Optional
 
 import typer
 
+try:
+    from rich.console import Console
+    from rich.table import Table
+
+    _RICH_AVAILABLE = True
+except ImportError:  # pragma: no cover - optional UX
+    _RICH_AVAILABLE = False
+
 from .config import DocGenConfig, default_config, load_config, resolve_config_path, write_config
 from .errors import ConfigError, DocGenError, ExitCode, UsageError
 from .logging import get_logger, setup_logging
@@ -15,17 +23,27 @@ from .services.scan_service import scan_repo
 from .utils.paths import resolve_repo_path
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
+_DEBUG = False
 
 
 @app.callback()
 def main(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable debug logging"),
+    debug: bool = typer.Option(False, "--debug", help="Show stack traces on error"),
 ) -> None:
-    setup_logging(verbose)
+    global _DEBUG
+    _DEBUG = debug
+    setup_logging(verbose or debug)
 
 
 def _handle_error(exc: Exception) -> None:
     logger = get_logger()
+    if _DEBUG:
+        if isinstance(exc, DocGenError):
+            logger.exception("Error", exc_info=exc)
+            raise typer.Exit(code=exc.exit_code)
+        logger.exception("Unexpected error", exc_info=exc)
+        raise typer.Exit(code=ExitCode.UNEXPECTED)
     if isinstance(exc, DocGenError):
         logger.error(str(exc))
         raise typer.Exit(code=exc.exit_code)
@@ -164,13 +182,51 @@ def scan(
 
         typer.echo(f"Project: {project.project_name}")
         typer.echo(f"Repo: {project.repo_root}")
-        typer.echo("Stacks:")
-        if project.stacks:
-            for stack in project.stacks:
-                evidence = ", ".join(stack.evidence) if stack.evidence else "-"
-                typer.echo(f"- {stack.name} (confidence {stack.confidence:.2f}): {evidence}")
+        typer.echo(f"Output dir: {config_data.output_dir}")
+        typer.echo(f"Exclude: {', '.join(config_data.exclude)}")
+
+        if _RICH_AVAILABLE:
+            console = Console()
+            stack_table = Table(title="Stacks")
+            stack_table.add_column("Name")
+            stack_table.add_column("Confidence")
+            stack_table.add_column("Evidence")
+            if project.stacks:
+                for stack in project.stacks:
+                    stack_table.add_row(
+                        stack.name,
+                        f"{stack.confidence:.2f}",
+                        ", ".join(stack.evidence) if stack.evidence else "-",
+                    )
+            else:
+                stack_table.add_row("-", "-", "-")
+            console.print(stack_table)
+
+            cmd_table = Table(title="Commands")
+            cmd_table.add_column("Type")
+            cmd_table.add_column("Command")
+            cmd_table.add_row("run", display(project.commands.run))
+            cmd_table.add_row("test", display(project.commands.test))
+            cmd_table.add_row("lint", display(project.commands.lint))
+            cmd_table.add_row("build", display(project.commands.build))
+            cmd_table.add_row("format", display(project.commands.format))
+            console.print(cmd_table)
         else:
-            typer.echo("- none")
+            typer.echo("Stacks:")
+            if project.stacks:
+                for stack in project.stacks:
+                    evidence = ", ".join(stack.evidence) if stack.evidence else "-"
+                    typer.echo(f"- {stack.name} (confidence {stack.confidence:.2f}): {evidence}")
+            else:
+                typer.echo("- none")
+
+            typer.echo("Commands:")
+            typer.echo(f"- run: {display(project.commands.run)}")
+            typer.echo(f"- test: {display(project.commands.test)}")
+            typer.echo(f"- lint: {display(project.commands.lint)}")
+            typer.echo(f"- build: {display(project.commands.build)}")
+            typer.echo(f"- format: {display(project.commands.format)}")
+
         typer.echo("Detected files:")
         if project.files_detected:
             for item in project.files_detected:
@@ -180,12 +236,6 @@ def scan(
         typer.echo(f"CI: {', '.join(project.ci) if project.ci else '-'}")
         typer.echo(f"Package manager: {project.package_manager or '-'}")
         typer.echo(f"Python tooling: {project.python_tooling or '-'}")
-        typer.echo("Commands:")
-        typer.echo(f"- run: {display(project.commands.run)}")
-        typer.echo(f"- test: {display(project.commands.test)}")
-        typer.echo(f"- lint: {display(project.commands.lint)}")
-        typer.echo(f"- build: {display(project.commands.build)}")
-        typer.echo(f"- format: {display(project.commands.format)}")
         if project.warnings:
             typer.echo("Warnings:")
             for warning in project.warnings:
@@ -219,23 +269,22 @@ def build(
                 typer.echo(f"- {rel}")
             except ValueError:
                 typer.echo(f"- {path}")
-        if dry_run:
-            typer.echo("Sections:")
-            for target in plan.targets:
-                report = plan.reports.get(target)
-                if not report:
-                    continue
-                label = target.name
-                typer.echo(f"- {label}:")
-                if report.created:
-                    typer.echo("  - created")
-                if report.overwritten:
-                    typer.echo("  - overwritten")
-                if report.added:
-                    typer.echo(f"  - added: {', '.join(report.added)}")
-                if report.replaced:
-                    typer.echo(f"  - replaced: {', '.join(report.replaced)}")
-                if report.unchanged:
-                    typer.echo(f"  - unchanged: {', '.join(report.unchanged)}")
+        typer.echo("Sections:")
+        for target in plan.targets:
+            report = plan.reports.get(target)
+            if not report:
+                continue
+            label = target.name
+            typer.echo(f"- {label}:")
+            if report.created:
+                typer.echo("  - created")
+            if report.overwritten:
+                typer.echo("  - overwritten")
+            if report.added:
+                typer.echo(f"  - added: {', '.join(report.added)}")
+            if report.replaced:
+                typer.echo(f"  - replaced: {', '.join(report.replaced)}")
+            if report.unchanged:
+                typer.echo(f"  - unchanged: {', '.join(report.unchanged)}")
     except Exception as exc:
         _handle_error(exc)

@@ -139,8 +139,9 @@ ARCHITECTURE.md (template lorsque le fichier est cree par DocGen):
 - Peut ecrire un fichier JSON (interne) pour debug si option `--json` (optionnelle, non obligatoire en V1).
 - Codes de sortie:
   - `0` succes
-  - `2` erreur de configuration (yaml invalide, output_dir invalide)
-  - `3` erreur de scan (permissions, depot illisible)
+  - `1` erreur de configuration (yaml invalide, output_dir invalide)
+  - `2` depot invalide (chemin absent)
+  - `3` erreur I/O (permissions, depot illisible)
 
 `docgen build`
 - Genere ou met a jour `README.md` et `ARCHITECTURE.md` dans `output_dir`.

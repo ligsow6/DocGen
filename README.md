@@ -1,9 +1,9 @@
 # DocGen
 
-DocGen is a CLI that will generate standardized Markdown documentation from a local Git repository.
-This repository currently contains the project skeleton and stub commands (init/scan/build).
+DocGen est un CLI qui genere une documentation Markdown standardisee a partir d'un depot Git local.
+Il detecte la stack, propose des commandes usuelles, puis met a jour uniquement les sections gerees.
 
-## Development setup
+## Installation (dev)
 
 - Requires Python 3.11+
 - Dependency management: `pyproject.toml` with setuptools + pip
@@ -27,20 +27,25 @@ Initialize configuration:
 docgen init
 ```
 
-Run stub scan/build:
+Run scan/build:
 
 ```
+docgen scan --format text
 docgen scan --format json
 
 docgen build --dry-run
+docgen build
 docgen build --force
 ```
 
-## Notes
+## Commandes
 
-- `scan` performs a real filesystem scan and suggests stacks/commands.
-- `build` renders Markdown docs from templates and updates only managed sections.
-- See `docs/spec.md` for the detailed specification.
+- `docgen init` : cree `docgen.yaml` avec les defaults.
+- `docgen scan` : analyse le depot (stacks, commandes, CI).
+- `docgen build` : genere/actualise README, ARCHITECTURE et index.
+- `--debug` : affiche les details d'erreur (stacktrace).
+
+## Idempotence & sections gerees
 
 ## Idempotence & sections gerees
 
@@ -54,3 +59,36 @@ DocGen gere uniquement des sections encadrees par des marqueurs HTML :
 
 Tout contenu hors des marqueurs est preserve. Relancer `docgen build` met a jour
 uniquement les sections gerees, sans ecraser les notes manuelles.
+
+## Exemple avant / apres
+
+Avant (manuel) :
+
+```
+# Mon Projet
+
+Mes notes personnelles.
+```
+
+Apres `docgen build` :
+
+```
+# Mon Projet
+
+Mes notes personnelles.
+
+<!-- DOCGEN:START summary -->
+## Summary
+Documentation generee automatiquement a partir du depot.
+<!-- DOCGEN:END summary -->
+```
+
+## Limites connues
+
+- Pas de publication automatique (GitHub Pages/Doxygen non declenches).
+- Pas d'analyse profonde du code (scan base sur fichiers et configs).
+- Pas de mise en page personnalisee hors templates.
+
+## Spec
+
+Voir `docs/spec.md` pour le contrat complet.

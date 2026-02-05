@@ -3,10 +3,11 @@
 
 class ExitCode:
     SUCCESS = 0
-    UNEXPECTED = 1
-    CONFIG = 2
+    CONFIG = 1
+    REPO = 2
     IO = 3
     USAGE = 4
+    UNEXPECTED = 5
 
 
 class DocGenError(Exception):
@@ -19,6 +20,10 @@ class DocGenError(Exception):
 
 class ConfigError(DocGenError):
     exit_code = ExitCode.CONFIG
+
+
+class RepoError(DocGenError):
+    exit_code = ExitCode.REPO
 
 
 class DocGenIOError(DocGenError):

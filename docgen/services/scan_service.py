@@ -52,6 +52,11 @@ def scan_repo(repo_path: Path, config: DocGenConfig) -> ProjectInfo:
         docker_info=docker_info,
     )
 
+    if not rel_files:
+        warnings.append("Repository appears empty or fully excluded.")
+    if not stacks:
+        warnings.append("No stack detected.")
+
     return ProjectInfo(
         project_name=repo_path.name,
         repo_root=repo_path.as_posix(),
