@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <title>{{ page.title | default: site.title }}</title>
+  
+  <!-- SEO -->
+  {% seo %}
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
+  <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
+  
+  <!-- Syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #fff;
+    }
+    
+    .page-header {
+      background: linear-gradient(135deg, #0366d6, #6f42c1);
+      color: white;
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    
+    .page-header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    
+    .page-header p {
+      margin: 1rem 0 0;
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .page-nav {
+      background: #f6f8fa;
+      border-bottom: 1px solid #e1e4e8;
+      padding: 1rem;
+      text-align: center;
+    }
+    
+    .page-nav a {
+      display: inline-block;
+      margin: 0 1rem;
+      padding: 0.5rem 1rem;
+      color: #0366d6;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+      border-radius: 6px;
+    }
+    
+    .page-nav a:hover {
+      background: #0366d6;
+      color: white;
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .markdown-body {
+      box-sizing: border-box;
+      min-width: 200px;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    
+    .page-footer {
+      background: #24292e;
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 4rem;
+    }
+    
+    .page-footer a {
+      color: #79b8ff;
+      text-decoration: none;
+    }
+    
+    .page-footer a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      .page-header h1 {
+        font-size: 1.8rem;
+      }
+      
+      .page-nav a {
+        display: block;
+        margin: 0.5rem 0;
+      }
+      
+      .main-content {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="page-header">
+    <h1>{{ site.title }}</h1>
+    <p>{{ site.description }}</p>
+  </header>
+  
+  <!-- Navigation -->
+  <nav class="page-nav">
+    <a href="{{ '/' | relative_url }}">🏠 Accueil</a>
+    <a href="{{ '/getting-started' | relative_url }}">🚀 Démarrage</a>
+    <a href="{{ '/commands' | relative_url }}">📖 Commandes</a>
+    <a href="{{ '/configuration' | relative_url }}">⚙️ Configuration</a>
+    <a href="{{ '/examples' | relative_url }}">💡 Exemples</a>
+    <a href="{{ site.url }}">💻 GitHub</a>
+  </nav>
+  
+  <!-- Main Content -->
+  <main class="main-content markdown-body">
+    {{ content }}
+  </main>
+  
+  <!-- Footer -->
+  <footer class="page-footer">
+    <p>
+      <strong>DocGen</strong> - Générateur automatique de documentation
+    </p>
+    <p>
+      <a href="https://github.com/yourusername/DocGen">GitHub</a> •
+      <a href="https://github.com/yourusername/DocGen/issues">Issues</a> •
+      <a href="https://github.com/yourusername/DocGen/blob/main/LICENSE">License</a>
+    </p>
+    <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+      Fait avec ❤️ par la communauté DocGen
+    </p>
+  </footer>
+  
+  <!-- Syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightBlock(block);
+      });
+    });
+  </script>
+</body>
+</html>

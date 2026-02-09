@@ -1,13 +1,11 @@
 # Configuration Jekyll pour DocGen
 title: DocGen
 description: Générateur automatique de documentation pour projets Git
-url: https://yourusername.github.io
+url: https://ligsow6.github.io
 baseurl: /DocGen
 
-# Thème moderne
-theme: jekyll-theme-cayman
-# Alternative recommandée si vous installez le thème:
-# remote_theme: just-the-docs/just-the-docs
+# Pas de thème, on utilise notre layout custom
+# theme: jekyll-theme-cayman
 
 # Navigation
 nav_links:
