@@ -6,155 +6,80 @@
   <meta name="description" content="{{ page.description | default: site.description }}">
   <title>{{ page.title | default: site.title }}</title>
   
-  <!-- SEO -->
   {% seo %}
   
-  <!-- Styles -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
-  <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
-  
-  <!-- Syntax highlighting -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      background: #fff;
-    }
-    
-    .page-header {
-      background: linear-gradient(135deg, #0366d6, #6f42c1);
-      color: white;
-      text-align: center;
-      padding: 3rem 1rem;
-    }
-    
-    .page-header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-      font-weight: 700;
-    }
-    
-    .page-header p {
-      margin: 1rem 0 0;
-      font-size: 1.2rem;
-      opacity: 0.9;
-    }
-    
-    .page-nav {
-      background: #f6f8fa;
-      border-bottom: 1px solid #e1e4e8;
-      padding: 1rem;
-      text-align: center;
-    }
-    
-    .page-nav a {
-      display: inline-block;
-      margin: 0 1rem;
-      padding: 0.5rem 1rem;
-      color: #0366d6;
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.2s;
-      border-radius: 6px;
-    }
-    
-    .page-nav a:hover {
-      background: #0366d6;
-      color: white;
-    }
-    
-    .main-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-    
-    .markdown-body {
-      box-sizing: border-box;
-      min-width: 200px;
-      max-width: 100%;
-      margin: 0 auto;
-    }
-    
-    .page-footer {
-      background: #24292e;
-      color: white;
-      text-align: center;
-      padding: 2rem;
-      margin-top: 4rem;
-    }
-    
-    .page-footer a {
-      color: #79b8ff;
-      text-decoration: none;
-    }
-    
-    .page-footer a:hover {
-      text-decoration: underline;
-    }
-    
-    @media (max-width: 768px) {
-      .page-header h1 {
-        font-size: 1.8rem;
-      }
-      
-      .page-nav a {
-        display: block;
-        margin: 0.5rem 0;
-      }
-      
-      .main-content {
-        padding: 1rem;
-      }
-    }
+    *{margin:0;padding:0;box-sizing:border-box}:root{--primary:#667eea;--primary-dark:#5568d3;--secondary:#764ba2;--text:#1a202c;--text-light:#4a5568;--bg:#fff;--bg-light:#f7fafc;--border:#e2e8f0;--shadow-sm:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px 0 rgba(0,0,0,.06);--shadow-md:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);--shadow-xl:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)}body{font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}.page-nav{position:fixed;top:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:1rem 2rem;z-index:1000;box-shadow:var(--shadow-sm)}.nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}.nav-logo{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;letter-spacing:-.02em}.nav-links{display:flex;gap:.5rem;align-items:center}.nav-links a{padding:.5rem 1rem;color:var(--text);text-decoration:none;font-weight:500;font-size:.95rem;border-radius:.5rem;transition:all .2s}.nav-links a:hover{background:var(--bg-light);color:var(--primary)}.nav-links a.primary-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:.6rem 1.5rem;margin-left:1rem}.nav-links a.primary-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}.page-header{margin-top:80px;padding:6rem 2rem 8rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);position:relative;overflow:hidden}.page-header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 20% 50%,rgba(255,255,255,.1) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.1) 0%,transparent 50%);pointer-events:none}.header-content{max-width:1000px;margin:0 auto;text-align:center;position:relative;z-index:1}.page-header h1{font-size:4rem;font-weight:800;color:#fff;margin-bottom:1.5rem;letter-spacing:-.03em;line-height:1.1;animation:fadeInUp .8s ease-out}.page-header p{font-size:1.4rem;color:rgba(255,255,255,.95);margin-bottom:2.5rem;font-weight:400;animation:fadeInUp .8s ease-out .2s both}.hero-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:fadeInUp .8s ease-out .4s both}.hero-buttons a{padding:1rem 2.5rem;border-radius:.75rem;text-decoration:none;font-weight:600;font-size:1.1rem;transition:all .3s;display:inline-flex;align-items:center;gap:.5rem}.hero-buttons a.primary{background:#fff;color:var(--primary);box-shadow:var(--shadow-lg)}.hero-buttons a.primary:hover{transform:translateY(-2px);box-shadow:var(--shadow-xl)}.hero-buttons a.secondary{background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.3)}.hero-buttons a.secondary:hover{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.5)}.main-content{max-width:1200px;margin:-4rem auto 0;padding:0 2rem 4rem;position:relative;z-index:10}.content-card{background:#fff;border-radius:1.5rem;padding:4rem;box-shadow:var(--shadow-xl);border:1px solid var(--border)}.content-card h1,.content-card h2,.content-card h3,.content-card h4{font-weight:700;color:var(--text);margin-top:2.5rem;margin-bottom:1rem;letter-spacing:-.02em}.content-card h1{font-size:2.5rem}.content-card h2{font-size:2rem;border-bottom:2px solid var(--border);padding-bottom:.5rem}.content-card h3{font-size:1.5rem;color:var(--primary)}.content-card h4{font-size:1.25rem}.content-card p{margin:1.25rem 0;color:var(--text-light);font-size:1.05rem;line-height:1.8}.content-card a{color:var(--primary);text-decoration:none;font-weight:500;border-bottom:2px solid transparent;transition:border-color .2s}.content-card a:hover{border-bottom-color:var(--primary)}.content-card pre{background:#282c34;border-radius:1rem;padding:2rem;overflow-x:auto;margin:2rem 0;box-shadow:var(--shadow-md)}.content-card code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:.9em;background:var(--bg-light);padding:.25rem .5rem;border-radius:.375rem;color:var(--primary);font-weight:500}.content-card pre code{background:transparent;padding:0;color:#abb2bf;font-weight:400}.content-card table{width:100%;border-collapse:separate;border-spacing:0;margin:2rem 0;border-radius:.75rem;overflow:hidden;box-shadow:var(--shadow-sm)}.content-card th{background:var(--bg-light);padding:1rem;text-align:left;font-weight:600;color:var(--text);border-bottom:2px solid var(--border)}.content-card td{padding:1rem;border-bottom:1px solid var(--border)}.content-card tr:last-child td{border-bottom:none}.content-card tr:hover{background:var(--bg-light)}.content-card ul,.content-card ol{margin:1.5rem 0;padding-left:2rem}.content-card li{margin:.75rem 0;color:var(--text-light);line-height:1.8}.page-footer{background:linear-gradient(135deg,#1a202c 0%,#2d3748 100%);color:#fff;padding:4rem 2rem 2rem;margin-top:6rem}.footer-content{max-width:1200px;margin:0 auto;text-align:center}.footer-content h3{font-size:1.5rem;margin-bottom:1rem;font-weight:700}.footer-links{display:flex;justify-content:center;gap:2rem;margin:2rem 0;flex-wrap:wrap}.footer-links a{color:rgba(255,255,255,.8);text-decoration:none;font-weight:500;transition:color .2s}.footer-links a:hover{color:#fff}.footer-bottom{margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:.95rem}@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@media (max-width:768px){.nav-container{flex-direction:column;gap:1rem}.nav-links{flex-wrap:wrap;justify-content:center}.page-header{padding:4rem 1.5rem 6rem}.page-header h1{font-size:2.5rem}.page-header p{font-size:1.1rem}.content-card{padding:2rem;border-radius:1rem}.main-content{padding:0 1rem 2rem}.hero-buttons{flex-direction:column}.hero-buttons a{width:100%;justify-content:center}}
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="page-header">
-    <h1>{{ site.title }}</h1>
-    <p>{{ site.description }}</p>
-  </header>
-  
-  <!-- Navigation -->
   <nav class="page-nav">
-    <a href="{{ '/' | relative_url }}">🏠 Accueil</a>
-    <a href="{{ '/getting-started' | relative_url }}">🚀 Démarrage</a>
-    <a href="{{ '/commands' | relative_url }}">📖 Commandes</a>
-    <a href="{{ '/configuration' | relative_url }}">⚙️ Configuration</a>
-    <a href="{{ '/examples' | relative_url }}">💡 Exemples</a>
-    <a href="{{ site.url }}">💻 GitHub</a>
+    <div class="nav-container">
+      <a href="{{ '/' | relative_url }}" class="nav-logo">DocGen</a>
+      <div class="nav-links">
+        <a href="{{ '/' | relative_url }}">Accueil</a>
+        <a href="{{ '/getting-started' | relative_url }}">Démarrage</a>
+        <a href="{{ '/commands' | relative_url }}">Commandes</a>
+        <a href="{{ '/configuration' | relative_url }}">Configuration</a>
+        <a href="{{ '/examples' | relative_url }}">Exemples</a>
+        <a href="https://github.com/ligsow6/DocGen" class="primary-btn">GitHub →</a>
+      </div>
+    </div>
   </nav>
   
-  <!-- Main Content -->
-  <main class="main-content markdown-body">
-    {{ content }}
+  <header class="page-header">
+    <div class="header-content">
+      <h1>{{ page.title | default: site.title }}</h1>
+      <p>{{ page.description | default: site.description }}</p>
+      {% if page.url == "/" or page.url == "/index.html" %}
+      <div class="hero-buttons">
+        <a href="{{ '/getting-started' | relative_url }}" class="primary">
+          <span>Commencer</span>
+          <span>→</span>
+        </a>
+        <a href="https://github.com/ligsow6/DocGen" class="secondary">
+          <span>Voir sur GitHub</span>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+  
+  <main class="main-content">
+    <div class="content-card">
+      {{ content }}
+    </div>
   </main>
   
-  <!-- Footer -->
   <footer class="page-footer">
-    <p>
-      <strong>DocGen</strong> - Générateur automatique de documentation
-    </p>
-    <p>
-      <a href="https://github.com/yourusername/DocGen">GitHub</a> •
-      <a href="https://github.com/yourusername/DocGen/issues">Issues</a> •
-      <a href="https://github.com/yourusername/DocGen/blob/main/LICENSE">License</a>
-    </p>
-    <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-      Fait avec ❤️ par la communauté DocGen
-    </p>
+    <div class="footer-content">
+      <h3>DocGen</h3>
+      <p>Générateur automatique de documentation pour projets Git</p>
+      
+      <div class="footer-links">
+        <a href="{{ '/' | relative_url }}">Accueil</a>
+        <a href="{{ '/getting-started' | relative_url }}">Documentation</a>
+        <a href="https://github.com/ligsow6/DocGen">GitHub</a>
+        <a href="https://github.com/ligsow6/DocGen/issues">Issues</a>
+        <a href="https://github.com/ligsow6/DocGen/blob/main/LICENSE">License</a>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>Fait avec ❤️ par la communauté DocGen • © 2026</p>
+      </div>
+    </div>
   </footer>
   
-  <!-- Syntax highlighting -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', (event) => {
       document.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightBlock(block);
+        hljs.highlightElement(block);
       });
     });
   </script>
