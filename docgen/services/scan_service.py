@@ -24,7 +24,7 @@ def scan_repo(repo_path: Path, config: DocGenConfig) -> ProjectInfo:
         readme_path=f"{output_dir}/README.md",
         architecture_path=f"{output_dir}/ARCHITECTURE.md",
         github_pages_dir=f"{output_dir}/" if output_dir != "." else "./",
-        doxygen_dir=f"{output_dir}/doxygen/" if output_dir != "." else "./doxygen/",
+        doxygen_dir=f"{output_dir}/api/" if output_dir != "." else "./api/",
     )
 
     patterns = _build_excludes(config.exclude, output_dir)
@@ -36,7 +36,7 @@ def scan_repo(repo_path: Path, config: DocGenConfig) -> ProjectInfo:
         raise DocGenIOError(str(exc)) from exc
 
     rel_files = sorted(path.as_posix() for path in files)
-    files_detected, ci = _detect_key_files(repo_path, rel_files)
+    files_detected, ci = _detect_key_files(repo_path, rel_files, output_dir)
 
     warnings: list[str] = []
     package_manager, node_scripts = _read_node_scripts(repo_path, rel_files, warnings)
@@ -74,7 +74,7 @@ def scan_repo(repo_path: Path, config: DocGenConfig) -> ProjectInfo:
 def _normalize_output_dir(output_dir: str) -> str:
     normalized = output_dir.strip().replace("\\", "/")
     if not normalized:
-        return "docs"
+        return "DocGen"
     return normalized.rstrip("/")
 
 
@@ -97,7 +97,11 @@ def _has_pattern(patterns: list[str], pattern: str) -> bool:
     return False
 
 
-def _detect_key_files(repo_path: Path, rel_files: list[str]) -> tuple[list[DetectedFile], set[str]]:
+def _detect_key_files(
+    repo_path: Path,
+    rel_files: list[str],
+    output_dir: str,
+) -> tuple[list[DetectedFile], set[str]]:
     detected: list[DetectedFile] = []
     ci: set[str] = set()
 
@@ -147,9 +151,16 @@ def _detect_key_files(repo_path: Path, rel_files: list[str]) -> tuple[list[Detec
     readmes = [path for path in rel_files if path.endswith("/README.md") or path == "README.md"]
     add(readmes, "readme")
 
-    docs_dir = repo_path / "docs"
-    if docs_dir.is_dir():
-        detected.append(DetectedFile(path="docs/", type="docs_dir"))
+    normalized_output = output_dir.strip().replace("\\", "/").rstrip("/")
+    if normalized_output and normalized_output not in {".", "./"}:
+        docs_dir = repo_path / normalized_output
+        if docs_dir.is_dir():
+            detected.append(DetectedFile(path=f"{normalized_output}/", type="docs_dir"))
+
+    if normalized_output != "docs":
+        docs_dir = repo_path / "docs"
+        if docs_dir.is_dir():
+            detected.append(DetectedFile(path="docs/", type="docs_dir"))
 
     if "README.md" not in rel_file_set and (repo_path / "README.md").is_file():
         detected.append(DetectedFile(path="README.md", type="readme"))

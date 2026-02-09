@@ -5,6 +5,11 @@
 <!-- DOCGEN:START summary -->
 ## Summary
 Documentation generee automatiquement a partir du depot.
+
+- Repo: `{{ repo_root }}`
+- Stacks detectees: {{ stacks_count }}
+- Fichiers cles detectes: {{ files_detected_count }}
+- Lignes de code estimees: {{ code_line_count }}
 <!-- DOCGEN:END summary -->
 
 <!-- DOCGEN:START stacks -->
@@ -23,19 +28,27 @@ Documentation generee automatiquement a partir du depot.
 {% else %}
 - Aucune stack detectee.
 {% endif %}
+
+{% if stack_nodes|length > 1 %}### Schema rapide
+```mermaid
+flowchart LR
+  repo((repo))
+{% for node in stack_nodes %}  repo --> {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+```
+{% endif %}
 <!-- DOCGEN:END stacks -->
 
 <!-- DOCGEN:START commands -->
 ## Commandes
 {% if commands.run or commands.test or commands.lint or commands.build %}
-{% if commands.run %}- Run: `{{ commands.run }}`
-{% endif %}
-{% if commands.test %}- Test: `{{ commands.test }}`
-{% endif %}
-{% if commands.lint %}- Lint: `{{ commands.lint }}`
-{% endif %}
-{% if commands.build %}- Build: `{{ commands.build }}`
-{% endif %}
+| Type | Commande |
+| --- | --- |
+| Run | {{ commands.run or '-' }} |
+| Test | {{ commands.test or '-' }} |
+| Lint | {{ commands.lint or '-' }} |
+| Build | {{ commands.build or '-' }} |
+| Format | {{ commands.format or '-' }} |
 {% else %}
 - Aucune commande detectee.
 {% endif %}
@@ -49,13 +62,114 @@ Documentation generee automatiquement a partir du depot.
 {% else %}
 - Aucun dossier racine detecte.
 {% endif %}
+
+{% if top_level_nodes|length > 1 %}### Schema d'arborescence
+```mermaid
+flowchart TB
+  root((repo))
+{% for node in top_level_nodes %}  root --> {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+```
+{% endif %}
 <!-- DOCGEN:END structure -->
+
+<!-- DOCGEN:START code_overview -->
+## Code overview
+{% if code_entrypoints %}### Points d'entree
+{% for item in code_entrypoints %}- {{ item }}
+{% endfor %}
+{% endif %}
+
+{% if code_files_by_ext %}### Fichiers par extension
+{% for item in code_files_by_ext %}- {{ item.ext }}: {{ item.count }}
+{% endfor %}
+{% endif %}
+
+{% if python_module_summaries %}### Modules Python (resume)
+{% for item in python_module_summaries %}- {{ item.file }} (classes: {{ item.classes }}, fonctions: {{ item.functions }}){% if item.doc %} — {{ item.doc }}{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if python_edges %}### Diagramme classes (Python)
+```mermaid
+classDiagram
+{% for cls in python_classes %}  class {{ cls.id }}["{{ cls.label }}"]
+{% endfor %}
+{% for edge in python_edges %}  {{ edge.from }} <|-- {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if python_file_edges %}### Dependances Python (fichiers)
+```mermaid
+flowchart LR
+{% for node in python_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for edge in python_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if ts_module_summaries or js_module_summaries %}### Modules JS/TS (resume)
+{% for item in ts_module_summaries %}- {{ item.file }} (classes: {{ item.classes }})
+{% endfor %}
+{% for item in js_module_summaries %}- {{ item.file }} (classes: {{ item.classes }})
+{% endfor %}
+{% endif %}
+
+{% if ts_edges or js_edges %}### Diagramme classes (JS/TS)
+```mermaid
+classDiagram
+{% for cls in ts_classes %}  class {{ cls.id }}["{{ cls.label }}"]
+{% endfor %}
+{% for cls in js_classes %}  class {{ cls.id }}["{{ cls.label }}"]
+{% endfor %}
+{% for edge in ts_edges %}  {{ edge.from }} <|-- {{ edge.to }}
+{% endfor %}
+{% for edge in js_edges %}  {{ edge.from }} <|-- {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if ts_file_edges or js_file_edges %}### Dependances JS/TS (fichiers)
+```mermaid
+flowchart LR
+{% for node in ts_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for node in js_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for edge in ts_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+{% for edge in js_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if python_functions %}### Fonctions Python (extraits)
+{% for item in python_functions %}- {{ item.name }} ({{ item.file }})
+{% endfor %}
+{% endif %}
+
+{% if code_files_sample %}### Extrait des fichiers codes
+{% for path in code_files_sample %}- {{ path }}
+{% endfor %}
+{% endif %}
+
+{% if code_warnings %}### Warnings
+{% for warning in code_warnings %}- {{ warning }}
+{% endfor %}
+{% endif %}
+<!-- DOCGEN:END code_overview -->
 
 <!-- DOCGEN:START ci -->
 ## CI
 {% if ci %}
-{% for ci_item in ci %}- {{ ci_item }}
+- Systems: {{ ci | join(", ") }}
+{% if ci_files %}
+- Fichiers:
+{% for path in ci_files %}  - {{ path }}
 {% endfor %}
+{% endif %}
 {% else %}
 - Aucune CI detectee.
 {% endif %}
@@ -80,8 +194,11 @@ doxygen Doxyfile
 
 <!-- DOCGEN:START key_files -->
 ## Fichiers cles
-{% if key_files %}
-{% for item in key_files %}- {{ item.path }} ({{ item.type }})
+{% if key_files_by_type %}
+{% for dtype, items in key_files_by_type.items() %}
+- {{ dtype }}:
+{% for item in items %}  - {{ item }}
+{% endfor %}
 {% endfor %}
 {% else %}
 - Aucun fichier cle detecte.

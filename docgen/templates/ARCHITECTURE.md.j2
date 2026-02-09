@@ -22,12 +22,72 @@ Composants/dossiers principaux :
 {% else %}
 Aucune structure de dossier principale detectee.
 {% endif %}
+
+{% if top_level_nodes|length > 1 %}### Schema des composants
+```mermaid
+flowchart LR
+  root((repo))
+{% for node in top_level_nodes %}  root --> {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+```
+{% endif %}
 <!-- DOCGEN:END components -->
 
 <!-- DOCGEN:START data_flow -->
 ## Data flow
-A completer selon le contexte du projet.
+Flux general a completer selon le contexte du projet.
 <!-- DOCGEN:END data_flow -->
+
+<!-- DOCGEN:START code_diagrams -->
+## Code diagrams
+{% if python_edges %}### Classes Python
+```mermaid
+classDiagram
+{% for cls in python_classes %}  class {{ cls.id }}["{{ cls.label }}"]
+{% endfor %}
+{% for edge in python_edges %}  {{ edge.from }} <|-- {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if python_file_edges %}### Dependances Python (fichiers)
+```mermaid
+flowchart LR
+{% for node in python_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for edge in python_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if ts_edges or js_edges %}### Classes JS/TS
+```mermaid
+classDiagram
+{% for cls in ts_classes %}  class {{ cls.id }}["{{ cls.label }}"]
+{% endfor %}
+{% for cls in js_classes %}  class {{ cls.id }}["{{ cls.label }}"]
+{% endfor %}
+{% for edge in ts_edges %}  {{ edge.from }} <|-- {{ edge.to }}
+{% endfor %}
+{% for edge in js_edges %}  {{ edge.from }} <|-- {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+
+{% if ts_file_edges or js_file_edges %}### Dependances JS/TS (fichiers)
+```mermaid
+flowchart LR
+{% for node in ts_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for node in js_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for edge in ts_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+{% for edge in js_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+<!-- DOCGEN:END code_diagrams -->
 
 <!-- DOCGEN:START deployment -->
 ## Deployment

@@ -10,7 +10,7 @@ import yaml
 
 from .errors import ConfigError, DocGenIOError
 
-DEFAULT_OUTPUT_DIR = "docs"
+DEFAULT_OUTPUT_DIR = "DocGen"
 DEFAULT_EXCLUDE = [".git/", "node_modules/", "dist/", "build/"]
 DEFAULT_README_TARGET = "output"
 DEFAULT_ENABLE_GITHUB_PAGES = True
@@ -89,6 +89,8 @@ def validate_config(data: dict[str, Any]) -> DocGenConfig:
     readme_target = data.get("readme_target", DEFAULT_README_TARGET)
     if readme_target not in {"root", "output"}:
         raise ConfigError("readme_target must be 'root' or 'output'")
+    if readme_target == "root" and output_dir not in {".", "./"}:
+        raise ConfigError("readme_target='root' requires output_dir='.'")
 
     enable_github_pages = data.get("enable_github_pages", DEFAULT_ENABLE_GITHUB_PAGES)
     if not isinstance(enable_github_pages, bool):

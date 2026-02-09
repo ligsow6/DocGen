@@ -1,0 +1,9 @@
+output_dir: DocGen
+exclude:
+- .git/
+- node_modules/
+- dist/
+- build/
+readme_target: output
+enable_github_pages: true
+enable_doxygen_block: auto

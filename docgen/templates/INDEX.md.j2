@@ -11,15 +11,83 @@ Bienvenue sur la documentation du projet.
 <!-- DOCGEN:START stacks -->
 ## Stacks detectees
 {% if stacks %}
-{% for stack in stacks %}- {{ stack.name }}
+{% for stack in stacks %}- {{ stack.name }} (confidence {{ "%.2f"|format(stack.confidence) }})
 {% endfor %}
 {% else %}
 - Aucune stack detectee.
 {% endif %}
 <!-- DOCGEN:END stacks -->
 
+<!-- DOCGEN:START commands -->
+## Commandes
+{% if commands.run or commands.test or commands.lint or commands.build %}
+- Run: {{ commands.run or '-' }}
+- Test: {{ commands.test or '-' }}
+- Lint: {{ commands.lint or '-' }}
+- Build: {{ commands.build or '-' }}
+- Format: {{ commands.format or '-' }}
+{% else %}
+- Aucune commande detectee.
+{% endif %}
+<!-- DOCGEN:END commands -->
+
+<!-- DOCGEN:START code_overview -->
+## Code overview
+- Lignes de code estimees: {{ code_line_count }}
+{% if code_files_by_ext %}
+### Extensions principales
+{% for item in code_files_by_ext %}- {{ item.ext }}: {{ item.count }}
+{% endfor %}
+{% endif %}
+
+{% if python_file_edges %}### Dependances Python (fichiers)
+```mermaid
+flowchart LR
+{% for node in python_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for edge in python_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+{% if ts_file_edges or js_file_edges %}### Dependances JS/TS (fichiers)
+```mermaid
+flowchart LR
+{% for node in ts_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for node in js_file_nodes %}  {{ node.id }}["{{ node.label }}"]
+{% endfor %}
+{% for edge in ts_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+{% for edge in js_file_edges %}  {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+```
+{% endif %}
+<!-- DOCGEN:END code_overview -->
+
+<!-- DOCGEN:START ci -->
+## CI
+{% if ci %}
+- {{ ci | join(", ") }}
+{% else %}
+- Aucune CI detectee.
+{% endif %}
+<!-- DOCGEN:END ci -->
+
 {% if enable_github_pages %}<!-- DOCGEN:START pages_info -->
 ## GitHub Pages
 Cette page est generee pour GitHub Pages.
 <!-- DOCGEN:END pages_info -->
 {% endif %}
+
+<!-- DOCGEN:START key_files -->
+## Fichiers cles
+{% if key_files_by_type %}
+{% for dtype, items in key_files_by_type.items() %}
+- {{ dtype }}:
+{% for item in items %}  - {{ item }}
+{% endfor %}
+{% endfor %}
+{% else %}
+- Aucun fichier cle detecte.
+{% endif %}
+<!-- DOCGEN:END key_files -->

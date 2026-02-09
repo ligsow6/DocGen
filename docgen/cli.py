@@ -250,13 +250,14 @@ def build(
     config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file path"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Do not write files"),
     force: bool = typer.Option(False, "--force", help="Overwrite existing files"),
+    doxygen: bool = typer.Option(False, "--doxygen", help="Run Doxygen if Doxyfile exists"),
 ) -> None:
     """Build documentation."""
     try:
         repo_path = resolve_repo_path(repo)
         config_data = _resolve_config(repo_path, config)
 
-        plan = build_docs(repo_path, config_data, dry_run=dry_run, force=force)
+        plan = build_docs(repo_path, config_data, dry_run=dry_run, force=force, doxygen=doxygen)
 
         if dry_run:
             typer.echo("Dry run. Files that would be generated:")
@@ -286,5 +287,10 @@ def build(
                 typer.echo(f"  - replaced: {', '.join(report.replaced)}")
             if report.unchanged:
                 typer.echo(f"  - unchanged: {', '.join(report.unchanged)}")
+        if doxygen:
+            if plan.doxygen_would_run and plan.doxygen_file:
+                typer.echo(f"Doxygen: would run using {plan.doxygen_file}")
+            elif plan.doxygen_ran and plan.doxygen_file:
+                typer.echo(f"Doxygen: ran using {plan.doxygen_file}")
     except Exception as exc:
         _handle_error(exc)

@@ -1,94 +1,200 @@
 # DocGen
 
-DocGen est un CLI qui genere une documentation Markdown standardisee a partir d'un depot Git local.
-Il detecte la stack, propose des commandes usuelles, puis met a jour uniquement les sections gerees.
+**DocGen** est un outil CLI (Command Line Interface) qui génère automatiquement de la documentation standardisée à partir d'un dépôt Git local.
 
-## Installation (dev)
+## 📋 Description
 
-- Requires Python 3.11+
-- Dependency management: `pyproject.toml` with setuptools + pip
+DocGen analyse votre projet, détecte automatiquement les technologies utilisées (Python, Node.js, Docker, etc.), identifie les commandes disponibles (test, build, lint), et génère une documentation structurée dans un dossier dédié.
 
-Install in editable mode:
+L'outil crée des fichiers Markdown avec des blocs spéciaux qui peuvent être mis à jour automatiquement sans écraser vos modifications manuelles.
 
+## ✨ Fonctionnalités
+
+- **Détection automatique des technologies** : Python, Node.js, Docker, et plus
+- **Identification des commandes** : test, build, lint, format, run
+- **Génération de documentation** : README.md et ARCHITECTURE.md
+- **Blocs de documentation intelligents** : Préserve vos notes manuelles
+- **Support Doxygen** : Génération optionnelle de documentation de code
+- **Configuration flexible** : via fichier `docgen.yaml`
+
+## 📦 Installation
+
+### Depuis le code source
+
+```bash
+# Cloner le dépôt
+git clone <url-du-repo>
+cd DocGen
+
+# Installer avec pip
+pip install -e .
 ```
-python -m pip install -e ".[dev]"
-```
 
-Run the CLI:
+### Prérequis
 
-```
-docgen --help
-python -m docgen --help
-```
+- Python >= 3.11
+- pip
 
-Initialize configuration:
+## 🚀 Utilisation
 
-```
+### 1. Initialiser DocGen dans votre projet
+
+```bash
+# Dans le répertoire de votre projet
 docgen init
+
+# Ou spécifier un chemin
+docgen init --repo /chemin/vers/projet
 ```
 
-Run scan/build:
+Cette commande crée :
+- Un fichier de configuration `docgen.yaml`
+- Un dossier `DocGen/` avec des templates README.md et ARCHITECTURE.md
 
-```
-docgen scan --format text
+### 2. Scanner votre projet
+
+```bash
+# Scanner le projet et afficher les informations détectées
+docgen scan
+
+# Format JSON
 docgen scan --format json
 
-docgen build --dry-run
+# Avec options
+docgen scan --repo /chemin/vers/projet --config docgen.yaml
+```
+
+Le scan détecte :
+- Les technologies/stacks utilisées
+- Les commandes disponibles (test, build, lint, etc.)
+- Les fichiers de configuration
+- Le gestionnaire de packages
+- Les outils CI/CD
+
+### 3. Générer la documentation
+
+```bash
+# Générer la documentation
 docgen build
+
+# Écraser les fichiers existants
 docgen build --force
+
+# Mode dry-run (aperçu sans écrire)
+docgen build --dry-run
+
+# Avec Doxygen (si Doxyfile existe)
+docgen build --doxygen
 ```
 
-## Commandes
+## ⚙️ Configuration
 
-- `docgen init` : cree `docgen.yaml` avec les defaults.
-- `docgen scan` : analyse le depot (stacks, commandes, CI).
-- `docgen build` : genere/actualise README, ARCHITECTURE et index.
-- `--debug` : affiche les details d'erreur (stacktrace).
+Le fichier `docgen.yaml` permet de personnaliser le comportement :
 
-## Idempotence & sections gerees
+```yaml
+# Dossier de sortie pour la documentation
+output_dir: DocGen
 
-## Idempotence & sections gerees
+# Dossiers/fichiers à exclure de l'analyse
+exclude:
+  - .git/
+  - node_modules/
+  - dist/
+  - build/
 
-DocGen gere uniquement des sections encadrees par des marqueurs HTML :
+# Cible pour le README ('output' ou 'root')
+readme_target: output
 
-```
-<!-- DOCGEN:START summary -->
-... contenu gere ...
-<!-- DOCGEN:END summary -->
-```
+# Activer GitHub Pages
+enable_github_pages: true
 
-Tout contenu hors des marqueurs est preserve. Relancer `docgen build` met a jour
-uniquement les sections gerees, sans ecraser les notes manuelles.
-
-## Exemple avant / apres
-
-Avant (manuel) :
-
-```
-# Mon Projet
-
-Mes notes personnelles.
+# Activer les blocs Doxygen ('auto', true, false)
+enable_doxygen_block: auto
 ```
 
-Apres `docgen build` :
+## 📖 Options CLI
+
+### Options globales
+
+- `-v, --verbose` : Active les logs détaillés
+- `--debug` : Affiche les stack traces en cas d'erreur
+
+### Commande `init`
+
+- `-r, --repo PATH` : Chemin du dépôt (par défaut : répertoire courant)
+- `-c, --config PATH` : Chemin du fichier de configuration
+
+### Commande `scan`
+
+- `-r, --repo PATH` : Chemin du dépôt
+- `-c, --config PATH` : Chemin du fichier de configuration
+- `-f, --format FORMAT` : Format de sortie (`text` ou `json`)
+
+### Commande `build`
+
+- `-r, --repo PATH` : Chemin du dépôt
+- `-c, --config PATH` : Chemin du fichier de configuration
+- `--dry-run` : Aperçu sans écrire les fichiers
+- `--force` : Écraser les fichiers existants
+- `--doxygen` : Exécuter Doxygen si un Doxyfile existe
+
+## 📂 Structure de la documentation générée
 
 ```
-# Mon Projet
-
-Mes notes personnelles.
-
-<!-- DOCGEN:START summary -->
-## Summary
-Documentation generee automatiquement a partir du depot.
-<!-- DOCGEN:END summary -->
+DocGen/
+├── README.md           # Documentation principale du projet
+├── ARCHITECTURE.md     # Architecture et composants
+└── index.md           # Index (si GitHub Pages activé)
 ```
 
-## Limites connues
+Les fichiers générés contiennent des blocs spéciaux :
 
-- Pas de publication automatique (GitHub Pages/Doxygen non declenches).
-- Pas d'analyse profonde du code (scan base sur fichiers et configs).
-- Pas de mise en page personnalisee hors templates.
+```markdown
+<!-- DOCGEN:BEGIN id="readme.summary" -->
+> Generated by DocGen. Do not edit this block manually.
 
-## Spec
+Contenu généré automatiquement
+<!-- DOCGEN:END id="readme.summary" -->
+```
 
-Voir `docs/spec.md` pour le contrat complet.
+## 💡 Exemple
+
+```bash
+# 1. Naviguer vers votre projet
+cd /mon/projet
+
+# 2. Initialiser DocGen
+docgen init
+
+# 3. Scanner pour voir ce qui est détecté
+docgen scan
+
+# 4. Générer la documentation
+docgen build
+
+# 5. La documentation est créée dans DocGen/
+ls DocGen/
+# README.md  ARCHITECTURE.md
+```
+
+## 🧪 Développement
+
+### Installer les dépendances de développement
+
+```bash
+pip install -e ".[dev]"
+```
+
+### Lancer les tests
+
+```bash
+pytest
+```
+
+## 📝 License
+
+Voir le fichier LICENSE.
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.

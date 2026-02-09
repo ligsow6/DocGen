@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import os
 from pathlib import Path
 from typing import Any
 
 from ..config import DocGenConfig
 from ..models import DetectedFile, ProjectInfo
+from ..errors import ConfigError, DocGenIOError
 from ..rendering import render_template, write_text
 from ..rendering.markers import apply_all_sections, extract_managed_sections
 from ..utils.ignore import build_excluder
 from ..services.scan_service import scan_repo, _build_excludes
+from ..utils.code_inspect import collect_code_overview
+from ..services.doxygen_service import find_doxyfile, run_doxygen
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,10 @@ class BuildPlan:
     sections: list[str]
     template_map: dict[str, Path]
     reports: dict[Path, "BuildReport"]
+    doxygen_requested: bool = False
+    doxygen_ran: bool = False
+    doxygen_would_run: bool = False
+    doxygen_file: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -37,7 +44,10 @@ def build_docs(
     config: DocGenConfig,
     dry_run: bool = False,
     force: bool = False,
+    doxygen: bool = False,
 ) -> BuildPlan:
+    if config.readme_target == "root" and config.output_dir not in {".", "./", ""}:
+        raise ConfigError("readme_target='root' requires output_dir='.'")
     project = scan_repo(repo_path, config)
     context, sections, template_map = _prepare_context(repo_path, config, project)
     plan = BuildPlan(
@@ -45,6 +55,7 @@ def build_docs(
         sections=sections,
         template_map=template_map,
         reports={},
+        doxygen_requested=doxygen,
     )
 
     for template_name, target in plan.template_map.items():
@@ -74,6 +85,18 @@ def build_docs(
         if not dry_run:
             write_text(target, updated)
 
+    if doxygen:
+        if dry_run:
+            doxyfile = find_doxyfile(repo_path)
+            if not doxyfile:
+                raise DocGenIOError(
+                    "Doxyfile not found (expected Doxyfile or docs/Doxyfile)."
+                )
+            plan = replace(plan, doxygen_would_run=True, doxygen_file=doxyfile)
+        else:
+            doxyfile = run_doxygen(repo_path)
+            plan = replace(plan, doxygen_ran=True, doxygen_file=doxyfile)
+
     return plan
 
 
@@ -95,8 +118,12 @@ def _prepare_context(
     enable_doxygen_block = _enable_doxygen_block(config.enable_doxygen_block, project)
 
     key_files = _filter_key_files(project.files_detected)
+    key_files_by_type = _group_files_by_type(key_files)
+    ci_files = _ci_files(project.files_detected)
     top_level_dirs = _top_level_dirs(repo_path, config)
     top_level_dirs = _filter_structure_dirs(top_level_dirs)
+    top_level_nodes = [_node_from_name(name) for name in top_level_dirs]
+    stack_nodes = [_node_from_name(stack.name) for stack in project.stacks]
 
     context = {
         "project_name": project.project_name,
@@ -104,8 +131,14 @@ def _prepare_context(
         "stacks": project.stacks,
         "commands": project.commands,
         "ci": project.ci,
+        "ci_files": ci_files,
         "key_files": key_files,
+        "key_files_by_type": key_files_by_type,
+        "files_detected_count": len(key_files),
+        "stacks_count": len(project.stacks),
         "top_level_dirs": top_level_dirs,
+        "top_level_nodes": top_level_nodes,
+        "stack_nodes": stack_nodes,
         "enable_github_pages": enable_github_pages,
         "enable_doxygen_block": enable_doxygen_block,
         "docker_enabled": any(stack.name == "docker" for stack in project.stacks),
@@ -113,6 +146,8 @@ def _prepare_context(
         "architecture_link": architecture_link,
         "index_link": index_link,
     }
+
+    context.update(collect_code_overview(repo_path, config))
 
     sections = ["Summary", "Stacks", "Commands", "Structure", "CI", "Documentation"]
     if enable_github_pages:
@@ -173,6 +208,21 @@ def _filter_key_files(files: list[DetectedFile]) -> list[DetectedFile]:
     return sorted(filtered, key=lambda item: (item.type, item.path))
 
 
+def _group_files_by_type(files: list[DetectedFile]) -> dict[str, list[str]]:
+    grouped: dict[str, list[str]] = {}
+    for item in files:
+        grouped.setdefault(item.type, []).append(item.path)
+    for items in grouped.values():
+        items.sort()
+    return dict(sorted(grouped.items()))
+
+
+def _ci_files(files: list[DetectedFile]) -> list[str]:
+    ci_types = {"github_actions", "gitlab_ci", "jenkins"}
+    paths = [item.path for item in files if item.type in ci_types]
+    return sorted(paths)
+
+
 def _top_level_dirs(repo_path: Path, config: DocGenConfig) -> list[str]:
     patterns = _build_excludes(config.exclude, config.output_dir)
     excluder = build_excluder(patterns)
@@ -191,6 +241,8 @@ def _top_level_dirs(repo_path: Path, config: DocGenConfig) -> list[str]:
 
 
 def _filter_structure_dirs(names: list[str]) -> list[str]:
+    banned = {"docs", "docgen", "documentation"}
+    names = [name for name in names if name.lower() not in banned]
     allowlist = {
         "src",
         "app",
@@ -201,7 +253,6 @@ def _filter_structure_dirs(names: list[str]) -> list[str]:
         "lib",
         "tests",
         "test",
-        "docs",
         "infra",
         "docker",
         "scripts",
@@ -217,3 +268,10 @@ def _filter_structure_dirs(names: list[str]) -> list[str]:
     if filtered:
         return sorted(filtered)
     return sorted(names)
+
+
+def _node_from_name(name: str) -> dict[str, str]:
+    safe = "".join(ch if ch.isalnum() else "_" for ch in name.lower())
+    if not safe:
+        safe = "node"
+    return {"id": safe, "label": f"{name}/"}
