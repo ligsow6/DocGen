@@ -1,0 +1,7 @@
+[project]
+name = "mini_repo"
+version = "0.1.0"
+description = "Mini repo exemple"
+
+[tool.ruff]
+line-length = 88
