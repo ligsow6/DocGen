@@ -31,9 +31,9 @@ def test_e2e_scan_build_idempotent(tmp_path: Path) -> None:
     build_result = runner.invoke(app, ["build", "--repo", str(repo_path)])
     assert build_result.exit_code == 0
 
-    readme_path = repo_path / "docs" / "README.md"
-    arch_path = repo_path / "docs" / "ARCHITECTURE.md"
-    index_path = repo_path / "docs" / "index.md"
+    readme_path = repo_path / "DocGen" / "README.md"
+    arch_path = repo_path / "DocGen" / "ARCHITECTURE.md"
+    index_path = repo_path / "DocGen" / "index.md"
 
     assert readme_path.exists()
     assert arch_path.exists()

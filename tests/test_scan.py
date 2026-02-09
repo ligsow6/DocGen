@@ -30,7 +30,7 @@ def test_scan_repo_node_detects_key_files_and_excludes() -> None:
     assert ".github/workflows/ci.yml" in paths
 
     assert "node_modules/package.json" not in paths
-    assert "docs/README.md" not in paths
+    assert "DocGen/README.md" not in paths
 
     assert "node" in _stack_names(project)
     assert project.package_manager == "yarn"

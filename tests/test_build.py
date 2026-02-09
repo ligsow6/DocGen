@@ -3,8 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 import shutil
 
+import pytest
+
 from docgen.config import DocGenConfig
+from docgen.errors import ConfigError
 from docgen.services.build_service import build_docs
+from docgen.services.doxygen_service import find_doxyfile
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -41,26 +45,19 @@ def test_build_creates_files_in_output_dir(tmp_path: Path) -> None:
 
 def test_build_readme_target_root(tmp_path: Path) -> None:
     repo_path = _copy_fixture(tmp_path, "repo_python")
-    config = DocGenConfig(output_dir="docs-out", readme_target="root")
+    config = DocGenConfig(output_dir="DocGen", readme_target="root")
 
-    build_docs(repo_path, config)
-
-    readme_path = repo_path / "README.md"
-    architecture_path = repo_path / "docs-out" / "ARCHITECTURE.md"
-    index_path = repo_path / "docs-out" / "index.md"
-
-    assert readme_path.exists()
-    assert architecture_path.exists()
-    assert index_path.exists()
+    with pytest.raises(ConfigError):
+        build_docs(repo_path, config)
 
 
 def test_build_updates_existing_markers_preserves_manual(tmp_path: Path) -> None:
     repo_path = _copy_fixture(tmp_path, "repo_node")
-    config = DocGenConfig(output_dir="docs", readme_target="output")
+    config = DocGenConfig(output_dir="DocGen", readme_target="output")
 
     build_docs(repo_path, config, force=True)
 
-    readme_path = repo_path / "docs" / "README.md"
+    readme_path = repo_path / "DocGen" / "README.md"
     content = readme_path.read_text(encoding="utf-8")
     assert "Documentation generee automatiquement" in content
 
@@ -82,9 +79,9 @@ def test_build_updates_existing_markers_preserves_manual(tmp_path: Path) -> None
 
 def test_build_inserts_markers_when_missing(tmp_path: Path) -> None:
     repo_path = _copy_fixture(tmp_path, "repo_python")
-    config = DocGenConfig(output_dir="docs", readme_target="output")
+    config = DocGenConfig(output_dir="DocGen", readme_target="output")
 
-    output_dir = repo_path / "docs"
+    output_dir = repo_path / "DocGen"
     output_dir.mkdir(parents=True, exist_ok=True)
     readme_path = output_dir / "README.md"
     readme_path.write_text("# Manual Title\n\nManual notes here.\n", encoding="utf-8")
@@ -99,9 +96,9 @@ def test_build_inserts_markers_when_missing(tmp_path: Path) -> None:
 
 def test_build_force_overwrites(tmp_path: Path) -> None:
     repo_path = _copy_fixture(tmp_path, "repo_multi")
-    config = DocGenConfig(output_dir="docs", readme_target="output")
+    config = DocGenConfig(output_dir="DocGen", readme_target="output")
 
-    output_dir = repo_path / "docs"
+    output_dir = repo_path / "DocGen"
     output_dir.mkdir(parents=True, exist_ok=True)
     readme_path = output_dir / "README.md"
     readme_path.write_text("# Manual\nDo not keep this.\n", encoding="utf-8")
@@ -115,10 +112,30 @@ def test_build_force_overwrites(tmp_path: Path) -> None:
 
 def test_build_dry_run_does_not_write(tmp_path: Path) -> None:
     repo_path = _copy_fixture(tmp_path, "repo_multi")
-    config = DocGenConfig(output_dir="out", readme_target="output")
+    config = DocGenConfig(output_dir="DocGen", readme_target="output")
 
     plan = build_docs(repo_path, config, dry_run=True)
 
-    assert not (repo_path / "out").exists()
+    assert not (repo_path / "DocGen").exists()
     for target in plan.targets:
         assert not target.exists()
+
+
+def test_build_dry_run_doxygen_reports_plan(tmp_path: Path) -> None:
+    repo_path = _copy_fixture(tmp_path, "repo_docker")
+    config = DocGenConfig(output_dir="DocGen", readme_target="output")
+
+    plan = build_docs(repo_path, config, dry_run=True, doxygen=True)
+
+    assert plan.doxygen_would_run
+    assert plan.doxygen_file is not None
+    assert plan.doxygen_file.name == "Doxyfile"
+
+
+def test_build_dry_run_doxygen_uses_template(tmp_path: Path) -> None:
+    repo_path = _copy_fixture(tmp_path, "repo_node")
+    config = DocGenConfig(output_dir="DocGen", readme_target="output")
+
+    plan = build_docs(repo_path, config, dry_run=True, doxygen=True)
+    expected = find_doxyfile(repo_path)
+    assert plan.doxygen_file == expected

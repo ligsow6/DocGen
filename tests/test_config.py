@@ -23,11 +23,11 @@ def test_load_config_overrides_exclude(tmp_path: Path) -> None:
 
     config_path = repo / "docgen.yaml"
     config_path.write_text(
-        "output_dir: docs\nexclude:\n  - custom/\n  - vendor/\n",
+        "output_dir: DocGen\nexclude:\n  - custom/\n  - vendor/\n",
         encoding="utf-8",
     )
 
     config = load_config(repo)
 
-    assert config.output_dir == "docs"
+    assert config.output_dir == "DocGen"
     assert config.exclude == ["custom/", "vendor/"]
