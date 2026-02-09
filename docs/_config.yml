@@ -1,0 +1,61 @@
+# Configuration Jekyll pour DocGen
+title: DocGen
+description: Générateur automatique de documentation pour projets Git
+url: https://yourusername.github.io
+baseurl: /DocGen
+
+# Thème moderne
+theme: jekyll-theme-cayman
+# Alternative recommandée si vous installez le thème:
+# remote_theme: just-the-docs/just-the-docs
+
+# Navigation
+nav_links:
+  - title: Accueil
+    url: /
+  - title: Démarrage
+    url: /getting-started
+  - title: Commandes
+    url: /commands
+  - title: Configuration
+    url: /configuration
+  - title: Exemples
+    url: /examples
+
+# Markdown
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-github-metadata
+
+# Exclude
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .sass-cache
+  - .jekyll-cache
+
+# SEO
+author: DocGen Team
+twitter:
+  card: summary
+logo: /assets/images/logo.png
+
+# Google Analytics (optionnel)
+# google_analytics: UA-XXXXXXXXX-X
