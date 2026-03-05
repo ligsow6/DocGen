@@ -130,6 +130,41 @@ def _detect_key_files(
         add(by_name.get(compose_name, []), "docker_compose")
 
     add(by_name.get("Doxyfile", []), "doxygen")
+    
+    # Java
+    add(by_name.get("pom.xml", []), "java")
+    add(by_name.get("build.gradle", []), "java")
+    add(by_name.get("build.gradle.kts", []), "java")
+    add(by_name.get("settings.gradle", []), "java")
+    add(by_name.get("gradlew", []), "java")
+    add(by_name.get("mvnw", []), "java")
+    
+    # Go
+    add(by_name.get("go.mod", []), "go")
+    add(by_name.get("go.sum", []), "go")
+    
+    # Rust
+    add(by_name.get("Cargo.toml", []), "rust")
+    add(by_name.get("Cargo.lock", []), "rust")
+    
+    # Ruby
+    add(by_name.get("Gemfile", []), "ruby")
+    add(by_name.get("Gemfile.lock", []), "ruby")
+    add(by_name.get("Rakefile", []), "ruby")
+    
+    # PHP
+    add(by_name.get("composer.json", []), "php")
+    add(by_name.get("composer.lock", []), "php")
+    
+    # C/C++
+    add(by_name.get("CMakeLists.txt", []), "cpp")
+    add(by_name.get("Makefile", []), "c_cpp")
+    add(by_name.get("makefile", []), "c_cpp")
+    
+    # .NET
+    for path in rel_files:
+        if path.endswith((".csproj", ".vbproj", ".fsproj", ".sln")):
+            add([path], "dotnet")
 
     add(by_name.get("Jenkinsfile", []), "jenkins")
     if by_name.get("Jenkinsfile"):
@@ -360,6 +395,59 @@ def _build_stacks(
             attributes["tool"] = python_info.tool
         stacks.append(StackInfo(name="python", confidence=confidence, evidence=python_evidence, attributes=attributes))
 
+    # Java
+    java_evidence = _collect_evidence(by_name, ["pom.xml", "build.gradle", "build.gradle.kts", "settings.gradle", "gradlew", "mvnw"])
+    if java_evidence:
+        confidence = 1.0 if (by_name.get("pom.xml") or by_name.get("build.gradle")) else 0.8
+        attributes = {}
+        if by_name.get("pom.xml"):
+            attributes["build_tool"] = "maven"
+        elif by_name.get("build.gradle") or by_name.get("build.gradle.kts"):
+            attributes["build_tool"] = "gradle"
+        stacks.append(StackInfo(name="java", confidence=confidence, evidence=java_evidence, attributes=attributes))
+
+    # Go
+    go_evidence = _collect_evidence(by_name, ["go.mod", "go.sum"])
+    if go_evidence:
+        confidence = 1.0 if by_name.get("go.mod") else 0.8
+        stacks.append(StackInfo(name="go", confidence=confidence, evidence=go_evidence))
+
+    # Rust
+    rust_evidence = _collect_evidence(by_name, ["Cargo.toml", "Cargo.lock"])
+    if rust_evidence:
+        confidence = 1.0 if by_name.get("Cargo.toml") else 0.8
+        stacks.append(StackInfo(name="rust", confidence=confidence, evidence=rust_evidence))
+
+    # Ruby
+    ruby_evidence = _collect_evidence(by_name, ["Gemfile", "Gemfile.lock", "Rakefile"])
+    if ruby_evidence:
+        confidence = 1.0 if by_name.get("Gemfile") else 0.7
+        stacks.append(StackInfo(name="ruby", confidence=confidence, evidence=ruby_evidence))
+
+    # PHP
+    php_evidence = _collect_evidence(by_name, ["composer.json", "composer.lock"])
+    if php_evidence:
+        confidence = 1.0 if by_name.get("composer.json") else 0.8
+        stacks.append(StackInfo(name="php", confidence=confidence, evidence=php_evidence))
+
+    # C/C++
+    cpp_evidence = _collect_evidence(by_name, ["CMakeLists.txt", "Makefile", "makefile"])
+    if cpp_evidence:
+        confidence = 0.9
+        attributes = {}
+        if by_name.get("CMakeLists.txt"):
+            attributes["build_tool"] = "cmake"
+        elif by_name.get("Makefile") or by_name.get("makefile"):
+            attributes["build_tool"] = "make"
+        stacks.append(StackInfo(name="c_cpp", confidence=confidence, evidence=cpp_evidence, attributes=attributes))
+
+    # .NET
+    dotnet_files = [f for f in rel_files if f.endswith((".csproj", ".vbproj", ".fsproj", ".sln"))]
+    if dotnet_files:
+        confidence = 1.0
+        evidence = dotnet_files[:5]  # Limiter le nombre de preuves
+        stacks.append(StackInfo(name="dotnet", confidence=confidence, evidence=evidence))
+
     docker_evidence = _collect_evidence(by_name, ["Dockerfile", *sorted(COMPOSE_FILES)])
     if docker_evidence:
         confidence = 0.9
@@ -386,17 +474,129 @@ def _build_commands(
     docker_info: DockerInfo,
 ) -> Commands:
     commands = Commands()
+    
+    rel_files = list(repo_path.rglob("*"))
+    by_name = _index_by_name([f.relative_to(repo_path).as_posix() for f in rel_files if f.is_file()])
 
     node_commands = _node_commands(node_scripts, package_manager)
     commands = _merge_commands(commands, node_commands)
 
     python_commands = _python_commands(python_info)
     commands = _merge_commands(commands, python_commands)
+    
+    # Java commands
+    if by_name.get("pom.xml"):
+        java_commands = Commands(
+            build="mvn package",
+            test="mvn test",
+            run="mvn spring-boot:run" if _has_spring_boot(repo_path / by_name["pom.xml"][0]) else "mvn exec:java",
+        )
+        commands = _merge_commands(commands, java_commands)
+    elif by_name.get("build.gradle") or by_name.get("build.gradle.kts"):
+        java_commands = Commands(
+            build="./gradlew build" if by_name.get("gradlew") else "gradle build",
+            test="./gradlew test" if by_name.get("gradlew") else "gradle test",
+            run="./gradlew run" if by_name.get("gradlew") else "gradle run",
+        )
+        commands = _merge_commands(commands, java_commands)
+    
+    # Go commands
+    if by_name.get("go.mod"):
+        go_commands = Commands(
+            build="go build",
+            test="go test ./...",
+            run="go run .",
+            format="go fmt ./...",
+        )
+        commands = _merge_commands(commands, go_commands)
+    
+    # Rust commands
+    if by_name.get("Cargo.toml"):
+        rust_commands = Commands(
+            build="cargo build",
+            test="cargo test",
+            run="cargo run",
+            format="cargo fmt",
+        )
+        commands = _merge_commands(commands, rust_commands)
+    
+    # Ruby commands
+    if by_name.get("Gemfile"):
+        ruby_commands = Commands(
+            test="bundle exec rspec" if _check_ruby_dependency(repo_path, "rspec") else "rake test",
+            run="bundle exec ruby main.rb",
+        )
+        commands = _merge_commands(commands, ruby_commands)
+        if by_name.get("Rakefile"):
+            ruby_commands = Commands(build="rake build")
+            commands = _merge_commands(commands, ruby_commands)
+    
+    # PHP commands
+    if by_name.get("composer.json"):
+        php_commands = Commands(
+            test="./vendor/bin/phpunit" if _check_php_dependency(repo_path, "phpunit") else "php artisan test",
+            run="php artisan serve",
+        )
+        commands = _merge_commands(commands, php_commands)
+    
+    # C/C++ commands
+    if by_name.get("CMakeLists.txt"):
+        cpp_commands = Commands(
+            build="cmake -B build && cmake --build build",
+            test="cd build && ctest",
+        )
+        commands = _merge_commands(commands, cpp_commands)
+    elif by_name.get("Makefile") or by_name.get("makefile"):
+        cpp_commands = Commands(
+            build="make",
+            test="make test",
+        )
+        commands = _merge_commands(commands, cpp_commands)
+    
+    # .NET commands
+    dotnet_files = [f for f in rel_files if f.suffix in (".csproj", ".sln")]
+    if dotnet_files:
+        dotnet_commands = Commands(
+            build="dotnet build",
+            test="dotnet test",
+            run="dotnet run",
+        )
+        commands = _merge_commands(commands, dotnet_commands)
 
     docker_commands = _docker_commands(repo_path, docker_info)
     commands = _merge_commands(commands, docker_commands)
 
     return commands
+
+
+def _has_spring_boot(pom_path: Path) -> bool:
+    try:
+        content = pom_path.read_text(encoding="utf-8")
+        return "spring-boot" in content.lower()
+    except Exception:
+        return False
+
+
+def _check_ruby_dependency(repo_path: Path, dep_name: str) -> bool:
+    gemfile = repo_path / "Gemfile"
+    if not gemfile.exists():
+        return False
+    try:
+        content = gemfile.read_text(encoding="utf-8")
+        return dep_name in content.lower()
+    except Exception:
+        return False
+
+
+def _check_php_dependency(repo_path: Path, dep_name: str) -> bool:
+    composer = repo_path / "composer.json"
+    if not composer.exists():
+        return False
+    try:
+        content = composer.read_text(encoding="utf-8")
+        return dep_name in content.lower()
+    except Exception:
+        return False
 
 
 def _node_commands(scripts: dict[str, str], package_manager: str | None) -> Commands:

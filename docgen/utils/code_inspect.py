@@ -140,6 +140,28 @@ def _is_code_file(path: str) -> bool:
         ".ts",
         ".tsx",
         ".jsx",
+        ".java",
+        ".kt",  # Kotlin
+        ".go",
+        ".rs",  # Rust
+        ".rb",  # Ruby
+        ".php",
+        ".c",
+        ".cpp",
+        ".cc",
+        ".cxx",
+        ".h",
+        ".hpp",
+        ".cs",  # C#
+        ".fs",  # F#
+        ".vb",  # VB.NET
+        ".swift",
+        ".m",   # Objective-C
+        ".scala",
+        ".r",   # R
+        ".jl",  # Julia
+        ".ex",  # Elixir
+        ".exs", # Elixir
     ))
 
 
